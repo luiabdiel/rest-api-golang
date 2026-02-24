@@ -85,3 +85,47 @@ func (pc *productController) GetProductById(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, product)
 }
+
+func (pc *productController) DeleteProductById(ctx *gin.Context) {
+	id := ctx.Param("product_id")
+	if id == "" {
+		response := model.Response{
+			Message: "Id do producto não pode ser nulo",
+		}
+
+		ctx.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	productId, err := strconv.Atoi(id)
+	if err != nil {
+		response := model.Response{
+			Message: "Id do producto precisa ser um número",
+		}
+
+		ctx.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	err = pc.productUsecase.DeleteProductById(productId)
+	if err != nil {
+		if err == usecase.ErrProductNotFound {
+			response := model.Response{
+				Message: "Produto não encontrado na base de dados",
+			}
+
+			ctx.JSON(http.StatusNotFound, response)
+		}
+
+		response := model.Response{
+			Message: "Erro ao deletar produto",
+		}
+
+		ctx.JSON(http.StatusInternalServerError, response)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, model.Response{
+		Message: "Produto deletado com sucesso",
+	})
+}
